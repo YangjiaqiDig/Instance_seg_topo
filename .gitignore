@@ -6,7 +6,6 @@ results/
 temp/
 test/
 samples/
-CoNSeP/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
