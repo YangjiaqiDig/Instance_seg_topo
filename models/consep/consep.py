@@ -17,6 +17,7 @@ ROOT_DIR = os.path.abspath("../../")
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
+from mrcnn import visualize
 
 # Path to trained weights file
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
@@ -190,32 +191,64 @@ class CoNSepDataset(utils.Dataset):
 #  COCO Evaluation
 ############################################################
 
-def build_coco_results(dataset, image_ids, rois, class_ids, scores, masks):
-    """Arrange resutls to match COCO specs in http://cocodataset.org/#format
+# def build_coco_results(dataset, image_ids, rois, class_ids, scores, masks):
+#     """Arrange resutls to match COCO specs in http://cocodataset.org/#format
+#     """
+#     # If no results, return an empty list
+#     if rois is None:
+#         return []
+#
+#     results = []
+#     for image_id in image_ids:
+#         # Loop through detections
+#         for i in range(rois.shape[0]):
+#             class_id = class_ids[i]
+#             score = scores[i]
+#             bbox = np.around(rois[i], 1)
+#             mask = masks[:, :, i]
+#
+#             result = {
+#                 "image_id": image_id,
+#                 "category_id": dataset.get_source_class_id(class_id, "coco"),
+#                 "bbox": [bbox[1], bbox[0], bbox[3] - bbox[1], bbox[2] - bbox[0]],
+#                 "score": score,
+#                 "segmentation": maskUtils.encode(np.asfortranarray(mask))
+#             }
+#             results.append(result)
+#     return results
+
+
+def rle_encode(mask):
+    """Encodes a mask in Run Length Encoding (RLE).
+    Returns a string of space-separated values.
     """
-    # If no results, return an empty list
-    if rois is None:
-        return []
+    assert mask.ndim == 2, "Mask must be of shape [Height, Width]"
+    # Flatten it column wise
+    m = mask.T.flatten()
+    # Compute gradient. Equals 1 or -1 at transition points
+    g = np.diff(np.concatenate([[0], m, [0]]), n=1)
+    # 1-based indicies of transition points (where gradient != 0)
+    rle = np.where(g != 0)[0].reshape([-1, 2]) + 1
+    # Convert second index in each pair to lenth
+    rle[:, 1] = rle[:, 1] - rle[:, 0]
+    return " ".join(map(str, rle.flatten()))
 
-    results = []
-    for image_id in image_ids:
-        # Loop through detections
-        for i in range(rois.shape[0]):
-            class_id = class_ids[i]
-            score = scores[i]
-            bbox = np.around(rois[i], 1)
-            mask = masks[:, :, i]
 
-            result = {
-                "image_id": image_id,
-                "category_id": dataset.get_source_class_id(class_id, "coco"),
-                "bbox": [bbox[1], bbox[0], bbox[3] - bbox[1], bbox[2] - bbox[0]],
-                "score": score,
-                "segmentation": maskUtils.encode(np.asfortranarray(mask))
-            }
-            results.append(result)
-    return results
-
+def rle_decode(rle, shape):
+    """Decodes an RLE encoded list of space separated
+    numbers and returns a binary mask."""
+    rle = list(map(int, rle.split()))
+    rle = np.array(rle, dtype=np.int32).reshape([-1, 2])
+    rle[:, 1] += rle[:, 0]
+    rle -= 1
+    mask = np.zeros([shape[0] * shape[1]], np.bool)
+    for s, e in rle:
+        assert 0 <= s < mask.shape[0]
+        assert 1 <= e <= mask.shape[0], "shape: {}  s {}  e {}".format(shape, s, e)
+        mask[s:e] = 1
+    # Reshape and transpose
+    mask = mask.reshape([shape[1], shape[0]]).T
+    return mask
 
 def mask_to_rle(image_id, mask, scores):
     "Encodes instance masks to submission format."
