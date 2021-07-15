@@ -1,6 +1,11 @@
 """
 Mask R-CNN
 """
+if __name__ == '__main__':
+    import matplotlib
+    # Agg backend runs without a display
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
 
 import datetime
 import os
