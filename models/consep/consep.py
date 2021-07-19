@@ -17,7 +17,7 @@ import scipy.io
 from imgaug import augmenters as iaa
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath("../../../")
+ROOT_DIR = os.path.abspath(".")
 
 print(ROOT_DIR)
 # Import Mask RCNN
