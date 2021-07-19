@@ -1,7 +1,7 @@
 """
 Mask R-CNN
 """
-CUDA_VISIBLE_DEVICES = 0
+CUDA_VISIBLE_DEVICES = 0,1
 if __name__ == '__main__':
     import matplotlib
     # Agg backend runs without a display
