@@ -30,7 +30,7 @@ from distutils.version import LooseVersion
 
 assert LooseVersion(tf.__version__) >= LooseVersion("1.3")
 assert LooseVersion(keras.__version__) >= LooseVersion('2.0.8')
-
+tf.compat.v1.disable_eager_execution()
 
 ############################################################
 #  Utility Functions
@@ -2179,19 +2179,19 @@ class MaskRCNN():
             clipnorm=self.config.GRADIENT_CLIP_NORM)
         # Add Losses
         # First, clear previously set losses to avoid duplication
-        self.keras_model._losses = []
-        self.keras_model._per_input_losses = {}
+        # self.keras_model._losses = []
+        # self.keras_model._per_input_losses = {}
         loss_names = [
             "rpn_class_loss", "rpn_bbox_loss",
             "mrcnn_class_loss", "mrcnn_bbox_loss", "mrcnn_mask_loss"]
+        added_loss_name = []
         for name in loss_names:
             layer = self.keras_model.get_layer(name)
-            if layer.output in self.keras_model.losses:
+            if layer.output.name in added_loss_name:#self.keras_model.losses:
                 continue
-            loss = (
-                    tf.reduce_mean(layer.output, keepdims=True)
-                    * self.config.LOSS_WEIGHTS.get(name, 1.))
+            loss = (tf.math.reduce_mean(layer.output, keepdims=True) * self.config.LOSS_WEIGHTS.get(name, 1.))
             self.keras_model.add_loss(loss)
+            added_loss_name.append(layer.output.name)
 
         # Add L2 Regularization
         # Skip gamma and beta weights of batch normalization layers.
@@ -2207,14 +2207,13 @@ class MaskRCNN():
             loss=[None] * len(self.keras_model.outputs))
 
         # Add metrics for losses
+        self.keras_model.metrics_tensors = []	
         for name in loss_names:
             if name in self.keras_model.metrics_names:
                 continue
             layer = self.keras_model.get_layer(name)
             self.keras_model.metrics_names.append(name)
-            loss = (
-                    tf.reduce_mean(layer.output, keepdims=True)
-                    * self.config.LOSS_WEIGHTS.get(name, 1.))
+            loss = (tf.math.reduce_mean(layer.output, keepdims=True) * self.config.LOSS_WEIGHTS.get(name, 1.))
             self.keras_model.metrics_tensors.append(loss)
 
     def set_trainable(self, layer_regex, keras_model=None, indent=0, verbose=1):
@@ -2389,8 +2388,8 @@ class MaskRCNN():
             validation_data=val_generator,
             validation_steps=self.config.VALIDATION_STEPS,
             max_queue_size=100,
-            workers=workers,
-            use_multiprocessing=True,
+            workers=1,#workers,
+            use_multiprocessing=False#True,
         )
         self.epoch = max(self.epoch, epochs)
 

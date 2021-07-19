@@ -138,12 +138,12 @@ class CoNSepDataset(utils.Dataset):
         auto_download: Automatically download and unzip MS-COCO images and annotations
         """
 
-        image_dir = "{}/Images".format(subset)
+        image_dir = "{}/Images/".format(subset)
         dataset_dir = os.path.join(dataset_dir, image_dir)
-
+        # print(dataset_dir, os.walk(dataset_dir))
         # Get image ids from directory names
-        image_ids = next(os.walk(dataset_dir))[-1]
-
+        image_ids = os.listdir(dataset_dir)#next(os.walk(dataset_dir))[-1]
+        print(image_ids)
         # Add classes
         for i, name in enumerate(CONSEP_CLASS_IDS):
             self.add_class("consep", i + 1, name)
@@ -165,7 +165,7 @@ class CoNSepDataset(utils.Dataset):
         """
         info = self.image_info[image_id]
         # Get mask directory from image path
-        mask_dir = os.path.join(os.path.dirname(os.path.dirname(info['path'])), "Labels/{}.mat".format(image_id))
+        mask_dir = os.path.join(os.path.dirname(os.path.dirname(info['path'])), "Labels/train_{}.mat".format(image_id))
         # Read mask files from .mat image
         '''
         'inst_map' is a 1000x1000 array containing a unique integer for each individual nucleus. i.e the map ranges from 0 to N, where 0 is the background and N is the number of nuclei.
