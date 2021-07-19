@@ -1,7 +1,7 @@
 """
 Mask R-CNN
 """
-CUDA_VISIBLE_DEVICES=0
+CUDA_VISIBLE_DEVICES = 0
 if __name__ == '__main__':
     import matplotlib
     # Agg backend runs without a display
@@ -17,8 +17,9 @@ import scipy.io
 from imgaug import augmenters as iaa
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath(".")
-#print(ROOT_DIR)
+ROOT_DIR = os.path.abspath("../../../")
+
+print(ROOT_DIR)
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
