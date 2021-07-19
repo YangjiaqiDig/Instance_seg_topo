@@ -1,7 +1,6 @@
 """
 Mask R-CNN
 """
-CUDA_VISIBLE_DEVICES = 0,1
 if __name__ == '__main__':
     import matplotlib
     # Agg backend runs without a display
@@ -26,6 +25,7 @@ from mrcnn.config import Config
 from mrcnn import model as modellib, utils
 from mrcnn import visualize
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '0, 2'
 # Path to trained weights file
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
@@ -155,6 +155,7 @@ class CoNSepDataset(utils.Dataset):
                 image_id=image_id,
                 path=os.path.join(dataset_dir, image_id)
             )
+        # print(self.image_info)
 
     def load_mask(self, image_id):
         """Generate instance masks for an image.
@@ -163,9 +164,10 @@ class CoNSepDataset(utils.Dataset):
             one mask per instance.
         class_ids: a 1D array of class IDs of the instance masks.
         """
+        # print(self.image_info, image_id)
         info = self.image_info[image_id]
         # Get mask directory from image path
-        mask_dir = os.path.join(os.path.dirname(os.path.dirname(info['path'])), "Labels/train_{}.mat".format(image_id))
+        mask_dir = os.path.join(os.path.dirname(os.path.dirname(info['path'])), "Labels/{}.mat".format(info['id'].replace('.png', ''))
         # Read mask files from .mat image
         '''
         'inst_map' is a 1000x1000 array containing a unique integer for each individual nucleus. i.e the map ranges from 0 to N, where 0 is the background and N is the number of nuclei.
