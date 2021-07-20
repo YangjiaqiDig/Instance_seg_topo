@@ -167,7 +167,7 @@ class CoNSepDataset(utils.Dataset):
         # print(self.image_info, image_id)
         info = self.image_info[image_id]
         # Get mask directory from image path
-        mask_dir = os.path.join(os.path.dirname(os.path.dirname(info['path'])), "Labels/{}.mat".format(info['id'].replace('.png', ''))
+        mask_dir = os.path.join(os.path.dirname(os.path.dirname(info['path'])), "Labels/{}.mat".format(info['id'].replace('.png', '')))
         # Read mask files from .mat image
         '''
         'inst_map' is a 1000x1000 array containing a unique integer for each individual nucleus. i.e the map ranges from 0 to N, where 0 is the background and N is the number of nuclei.
